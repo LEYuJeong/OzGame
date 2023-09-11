@@ -18,6 +18,7 @@ public class PlayerController : MonoBehaviour
         IDLE = 0,
         WALK,
         JUMP,
+        DOWN,
         BOOSTER,
         DEAD
     }
@@ -26,8 +27,9 @@ public class PlayerController : MonoBehaviour
 
     public Vector2 currentPosition;     // 현재 위치
     public float moveSpeed = 10.0f;   // 이동 속도
-    public float jumpSpeed = 10.0f;   // 점프 속도
-    public float limitY;                    // 최대 점프 높이
+    public float jumpSpeed = 15.0f;   // 점프 속도
+    public float downSpeed = 18.0f;  // 하강 속도
+    public float limitY = 15.0f;          // 최대 점프 높이
      
     public int jumpCount = 0;         // 현재 점프 횟수
     public int jumpMaxCount = 2;   // 점프 가능 횟수
@@ -38,15 +40,18 @@ public class PlayerController : MonoBehaviour
 
     void Start()
     {
-        
+        currentPosition = transform.position;
     }
 
     void Update()
     {
-        Move();
-        Jump();
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            currentPosition = transform.position;
+            playerState = PLAYERSTATE.JUMP;
+        }
+
         StateChange();
-        PlayerChange();
     }
 
     public void StateChange()
@@ -54,10 +59,28 @@ public class PlayerController : MonoBehaviour
         switch (playerState)
         {
             case PLAYERSTATE.IDLE:
+                transform.position = currentPosition;
+
                 break;
             case PLAYERSTATE.WALK: 
                 break;
             case PLAYERSTATE.JUMP:
+                transform.Translate(Vector3.up * jumpSpeed * Time.deltaTime);
+
+                if(transform.position.y > limitY)
+                {
+                    playerState = PLAYERSTATE.DOWN;
+                }
+
+                break;
+             case PLAYERSTATE.DOWN:
+                transform.Translate(Vector3.down * jumpSpeed * Time.deltaTime);
+
+                if(transform.position.y < currentPosition.y)
+                {
+                    playerState = PLAYERSTATE.IDLE;
+                }
+
                 break;
             case PLAYERSTATE.BOOSTER: 
                 break;
@@ -82,44 +105,6 @@ public class PlayerController : MonoBehaviour
             case PLAYERTYPE.LION:
                 jumpMaxCount = 1;
                 break;
-        }
-    }
-
-    public void Move()
-    {
-        if (Input.GetKeyDown(KeyCode.RightArrow) && isJump)
-        {
-            playerState = PLAYERSTATE.WALK;
-            transform.Translate(Vector2.right * moveSpeed * Time.deltaTime);
-        }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow) && isJump)
-        {
-            playerState = PLAYERSTATE.WALK;
-            transform.Translate(Vector2.left * moveSpeed * Time.deltaTime);
-        }
-        else
-        {
-            playerState = PLAYERSTATE.IDLE;
-        }
-    }
-
-    public void Jump()
-    {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            playerState = PLAYERSTATE.JUMP;
-        }
-    }
-
-    private void OnCollisionEnter2D(Collision2D coll)
-    {
-        if (coll.gameObject.CompareTag("Enemy"))
-        {
-
-        }
-        else if (coll.gameObject.CompareTag("Item"))
-        {
-
         }
     }
 }
