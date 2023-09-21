@@ -25,12 +25,14 @@ public class PlayerController : MonoBehaviour
     public PLAYERTYPE playerType = PLAYERTYPE.DOROTHY;
     public PLAYERSTATE playerState = PLAYERSTATE.IDLE;
 
-    public Vector2 currentPosition;     // 현재 위치
+    public Vector2 currentPosition;    // 현재 위치
+    public Vector2 dir;                    // 현재 이동 방향
+
     public float moveSpeed = 10.0f;   // 이동 속도
     public float jumpSpeed = 15.0f;   // 점프 속도
     public float downSpeed = 18.0f;  // 하강 속도
     public float limitY = 15.0f;          // 최대 점프 높이
-     
+
     public int jumpCount = 0;         // 현재 점프 횟수
     public int jumpMaxCount = 2;   // 점프 가능 횟수
 
@@ -45,13 +47,33 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Space))
+        // 움직임 입력
+        if (Input.GetKey(KeyCode.LeftArrow) && !isJump)
+        {
+            dir = Vector2.left;
+            playerState = PLAYERSTATE.WALK;
+        }
+        else if(Input.GetKey(KeyCode.RightArrow) && !isJump)
+        {
+            dir = Vector2.right;
+            playerState = PLAYERSTATE.WALK;
+        }
+        else if(Input.GetKeyUp(KeyCode.LeftArrow)  ||  Input.GetKeyUp(KeyCode.RightArrow))
+        {
+            playerState = PLAYERSTATE.IDLE;
+        }
+
+        // 점프 입력
+        if(Input.GetKeyDown(KeyCode.Space) && jumpCount < jumpMaxCount)
         {
             currentPosition = transform.position;
             playerState = PLAYERSTATE.JUMP;
+            isJump = true;
+            jumpCount++;
         }
 
         StateChange();
+        PlayerChange();
     }
 
     public void StateChange()
@@ -59,15 +81,16 @@ public class PlayerController : MonoBehaviour
         switch (playerState)
         {
             case PLAYERSTATE.IDLE:
-                transform.position = currentPosition;
 
                 break;
-            case PLAYERSTATE.WALK: 
+            case PLAYERSTATE.WALK:
+                transform.Translate(dir * moveSpeed * Time.deltaTime);
+
                 break;
             case PLAYERSTATE.JUMP:
                 transform.Translate(Vector3.up * jumpSpeed * Time.deltaTime);
 
-                if(transform.position.y > limitY)
+                if(transform.position.y > limitY + currentPosition.y)
                 {
                     playerState = PLAYERSTATE.DOWN;
                 }
@@ -75,11 +98,6 @@ public class PlayerController : MonoBehaviour
                 break;
              case PLAYERSTATE.DOWN:
                 transform.Translate(Vector3.down * jumpSpeed * Time.deltaTime);
-
-                if(transform.position.y < currentPosition.y)
-                {
-                    playerState = PLAYERSTATE.IDLE;
-                }
 
                 break;
             case PLAYERSTATE.BOOSTER: 
@@ -95,16 +113,46 @@ public class PlayerController : MonoBehaviour
         {
             case PLAYERTYPE.DOROTHY:
                 jumpMaxCount = 2;
+                gameObject.name = playerType.ToString();
+
                 break;
             case PLAYERTYPE.SCARECROW:
                 jumpMaxCount = 1;
+                gameObject.name = playerType.ToString();
+
                 break;
             case PLAYERTYPE.WOODCUTTER:
                 jumpMaxCount = 1;
+                gameObject.name = playerType.ToString();
+
                 break;
             case PLAYERTYPE.LION:
                 jumpMaxCount = 1;
+                gameObject.name = playerType.ToString();
+
                 break;
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D coll)
+    {
+        if (coll.collider.CompareTag("Ground") || coll.collider.CompareTag("Tile"))
+        {
+            if(playerState == PLAYERSTATE.DOWN)
+            {
+                if(playerType == PLAYERTYPE.LION)
+                {
+                    playerType = PLAYERTYPE.DOROTHY;
+                }
+                else
+                {
+                    playerType++;
+                }
+            }
+
+            playerState = PLAYERSTATE.IDLE;
+            isJump = false;
+            jumpCount = 0;
         }
     }
 }
