@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class TileController : MonoBehaviour
 {
@@ -13,6 +14,7 @@ public class TileController : MonoBehaviour
     }
     public TILETYPE tIleType;
 
+    public float currentTime = 0;
     public int moveFlag = 1;  // 타일의 이동 지점을 숫자 표기 ( 시작 지점 1, 도착 지점 2 )
     public float moveSpeed = 0.5f;   // 타일 이동 속도
 
@@ -60,6 +62,21 @@ public class TileController : MonoBehaviour
         StartCoroutine(TileMoveController());
     }
 
+    IEnumerator TileDown()
+    {
+        int loopNum = 0;
+
+        while (currentTime < 5.0f)
+        {
+            currentTime += Time.deltaTime;
+            transform.Translate(Vector2.down * moveSpeed * Time.deltaTime);
+            yield return new WaitForSeconds(0.01f);
+
+            if (loopNum++ > 10000)
+                throw new Exception("Infinite Loop");
+        }
+    }
+
     private void OnCollisionEnter2D(Collision2D coll)
     {
         PlayerController _player = coll.gameObject.GetComponent<PlayerController>();
@@ -69,13 +86,9 @@ public class TileController : MonoBehaviour
             // 가벼운 타일 밟았을 때 처리
             if(tIleType == TILETYPE.LIGHTTILE)
             {
-                if (_player.playerType == PlayerController.PLAYERTYPE.SCARECROW)
+                if (_player.playerType != PlayerController.PLAYERTYPE.SCARECROW)
                 {
-
-                }
-                else
-                {
-
+                    StartCoroutine(TileDown());
                 }
             }
 
@@ -84,11 +97,7 @@ public class TileController : MonoBehaviour
             {
                 if (_player.playerType == PlayerController.PLAYERTYPE.WOODCUTTER)
                 {
-
-                }
-                else
-                {
-
+                    StartCoroutine(TileDown());
                 }
             }
         }
