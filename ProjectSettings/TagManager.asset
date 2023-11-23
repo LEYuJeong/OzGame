@@ -4,7 +4,10 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - Platform
+  - Enemy
+  - Item
+  - Ground
+  - Tile
   layers:
   - Default
   - TransparentFX
@@ -12,8 +15,8 @@ TagManager:
   - 
   - Water
   - UI
-  - Ground
-  - Platform
+  - Player
+  - 
   - 
   - 
   - 
